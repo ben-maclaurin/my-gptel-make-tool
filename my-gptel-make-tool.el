@@ -275,27 +275,51 @@
                :description "URL of the webpage to read"))
  :category "web")
 
-commit latest changes and push
+(gptel-make-tool
+ :name "edit_file"
+ :function (lambda (file-path content &optional append)
+             (if (file-exists-p file-path)
+                 (with-temp-buffer
+                   (when append
+                     (insert-file-contents file-path))
+                   (goto-char (if append (point-max) (point-min)))
+                   (insert content)
+                   (write-region (point-min) (point-max) file-path)
+                   (format "%s content in %s" 
+                           (if append "Appended" "Replaced") 
+                           file-path))
+               (error "Error: file %s does not exist" file-path)))
+ :description "edit an existing file by replacing content or appending to it"
+ :args (list '(:name "file-path"
+               :type string
+               :description "the path of the file to edit")
+             '(:name "content"
+               :type string
+               :description "the content to write to the file")
+             '(:name "append"
+               :type boolean
+               :description "whether to append content instead of replacing"
+               :optional t))
+ :category "file")
 
-I'll help you commit and push your changes. Let me do that for you step by step:
-
-First, let's check the current status of your git repository:
-
-```tool
-git_status
-```
-
-Let me commit all the changes:
-
-```tool
-git_commit "Add tools for file operations, git management, and web interaction" true
-```
-
-Now let's push the committed changes:
-
-```tool
-git_push
-```
-
-Your changes have been committed with the message "Add tools for file operations, git management, and web interaction" and pushed to the remote repository.
-
+(gptel-make-tool
+ :name "shell_command"
+ :function (lambda (command &optional display-buffer)
+             (if display-buffer
+                 (let ((output (shell-command-to-string command)))
+                   (with-current-buffer (get-buffer-create "*Shell Command Output*")
+                     (erase-buffer)
+                     (insert output)
+                     (display-buffer (current-buffer)))
+                   (format "Executed command: '%s'. Output displayed in buffer *Shell Command Output*" command))
+               (shell-command command)
+               (format "Executed command: '%s'" command)))
+ :description "execute a shell command"
+ :args (list '(:name "command"
+               :type string
+               :description "the shell command to execute")
+             '(:name "display-buffer"
+               :type boolean
+               :description "whether to display command output in a buffer"
+               :optional t))
+ :category "system")
